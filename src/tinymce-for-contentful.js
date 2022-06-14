@@ -1,4 +1,4 @@
-window.contentfulExtension.init(function(api) {
+window.contentfulExtension.init(function (api) {
   function tinymceForContentful(api) {
     function tweak(param) {
       var t = param.trim();
@@ -13,7 +13,9 @@ window.contentfulExtension.init(function(api) {
 
     var p = tweak(api.parameters.instance.plugins);
     var tb = tweak(api.parameters.instance.toolbar);
-    var mb = tweak(api.parameters.instance.menubar);  
+    var mb = tweak(api.parameters.instance.menubar);
+    var ppwi = tweak(api.parameters.instance.wordImport);
+    var pphi = tweak(api.parameters.instance.htmlImport);
 
     api.window.startAutoResizer();
 
@@ -27,19 +29,22 @@ window.contentfulExtension.init(function(api) {
       autoresize_bottom_margin: 15,
       resize: false,
       image_caption: true,
-      init_instance_callback : function(editor) {
+      powerpaste_word_import: ppwi,
+      powerpaste_html_import: pphi,
+      paste_data_images: false,
+      init_instance_callback: function (editor) {
         var listening = true;
 
         function getEditorContent() {
-          return editor.getContent() || '';
+          return editor.getContent() || "";
         }
 
         function getApiContent() {
-          return api.field.getValue() || '';
+          return api.field.getValue() || "";
         }
 
         function setContent(x) {
-          var apiContent = x || '';
+          var apiContent = x || "";
           var editorContent = getEditorContent();
           if (apiContent !== editorContent) {
             //console.log('Setting editor content to: [' + apiContent + ']');
@@ -49,7 +54,7 @@ window.contentfulExtension.init(function(api) {
 
         setContent(api.field.getValue());
 
-        api.field.onValueChanged(function(x) {
+        api.field.onValueChanged(function (x) {
           if (listening) {
             setContent(x);
           }
@@ -62,34 +67,45 @@ window.contentfulExtension.init(function(api) {
           if (editorContent !== apiContent) {
             //console.log('Setting content in api to: [' + editorContent + ']');
             listening = false;
-            api.field.setValue(editorContent).then(function() {
-              listening = true;
-            }).catch(function(err) {
-              console.log("Error setting content", err);
-              listening = true;
-            });
+            api.field
+              .setValue(editorContent)
+              .then(function () {
+                listening = true;
+              })
+              .catch(function (err) {
+                console.log("Error setting content", err);
+                listening = true;
+              });
           }
         }
 
-        var throttled = _.throttle(onEditorChange, 500, {leading: true});
-        editor.on('change keyup setcontent blur', throttled);
-      }
+        var throttled = _.throttle(onEditorChange, 500, { leading: true });
+        editor.on("change keyup setcontent blur", throttled);
+      },
     });
   }
 
   function loadScript(src, onload) {
-    var script = document.createElement('script');
-    script.setAttribute('src', src);
+    var script = document.createElement("script");
+    script.setAttribute("src", src);
     script.onload = onload;
     document.body.appendChild(script);
   }
 
-  var sub = location.host == "contentful.staging.tiny.cloud" ? "cdn.staging" : "cdn";
+  var sub =
+    location.host == "contentful.staging.tiny.cloud" ? "cdn.staging" : "cdn";
   var apiKey = api.parameters.installation.apiKey;
   var channel = api.parameters.installation.channel;
-  var tinymceUrl = "https://" + sub + ".tiny.cloud/1/" + apiKey + "/tinymce/" + channel + "/tinymce.min.js";
+  var tinymceUrl =
+    "https://" +
+    sub +
+    ".tiny.cloud/1/" +
+    apiKey +
+    "/tinymce/" +
+    channel +
+    "/tinymce.min.js";
 
-  loadScript(tinymceUrl, function() {
+  loadScript(tinymceUrl, function () {
     tinymceForContentful(api);
   });
 });
